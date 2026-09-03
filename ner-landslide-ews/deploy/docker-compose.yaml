@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: timescale/timescaledb-ha:pg15
+    environment:
+      POSTGRES_USER: landslide
+      POSTGRES_PASSWORD: landslide
+      POSTGRES_DB: landslide_ews
+    volumes:
+      - pgdata:/home/postgres/pgdata
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports: ["5432:5432"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports: ["1883:1883"]
+
+  api:
+    build: ./backend
+    env_file: .env
+    depends_on: [postgres, redis]
+    ports: ["8000:8000"]
+    volumes:
+      - model-data:/data/models
+
+  celery-beat:
+    build: ./ingestion
+    command: celery -A scheduler beat --loglevel=info
+    env_file: .env
+    depends_on: [redis, postgres]
+
+  celery-worker:
+    build: ./backend
+    command: celery -A app.services.scoring worker -B --loglevel=info
+    env_file: .env
+    depends_on: [redis, postgres]
+
+  dashboard:
+    image: nginx:alpine
+    volumes: ["./dashboard:/usr/share/nginx/html:ro"]
+    ports: ["8080:80"]
+
+  mobile:
+    image: nginx:alpine
+    volumes: ["./mobile:/usr/share/nginx/html:ro"]
+    ports: ["8081:80"]
+
+  prometheus:
+    image: prom/prometheus
+    volumes: ["./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml"]
+    ports: ["9090:9090"]
+
+volumes:
+  pgdata:
+  model-data:

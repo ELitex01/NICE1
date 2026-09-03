@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NER Landslide Watch</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#0f1117;--card:#181c26;--card2:#232838;--line:#2a2f3d;--accent:#ff6b35;
+--ok:#22c55e;--warn:#f59e0b;--hi:#ef4444;--txt:#e5e7eb;--mut:#9ca3af}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{padding:10px 18px;display:flex;align-items:center;gap:14px;background:var(--card);border-bottom:1px solid var(--line);z-index:1100}
+header h1{font-size:18px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#2563eb}
+#modeBadge{font-size:11px;padding:3px 10px;border-radius:20px;background:#444}
+#modeBadge.live{background:var(--ok);color:#042210}
+#tabs{display:flex;gap:8px;margin-left:auto}
+.tab{padding:6px 16px;border-radius:8px;cursor:pointer;font-size:13px;background:var(--card2)}
+.tab.active{background:var(--accent);color:#fff}
+main{flex:1;position:relative}
+#map{position:absolute;inset:0;background:#0d0f14}
+#controls{position:absolute;top:12px;right:12px;z-index:1000;display:flex;flex-direction:column;gap:8px;width:210px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
+.panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-bottom:8px}
+.btnrow{display:flex;gap:6px}
+.btnrow button{flex:1;padding:6px 4px;font-size:11px;border-radius:6px;border:1px solid var(--line);background:var(--card2);color:var(--txt);cursor:pointer}
+.btnrow button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+label.chk{display:flex;gap:6px;align-items:center;font-size:12px;margin-top:8px;cursor:pointer}
+.legend div{font-size:12px;margin:3px 0}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+#feed{font-size:11px;color:var(--mut);line-height:1.7}
+#feed .ok{color:var(--ok)} #feed .st{color:var(--hi)}
+#timebar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;width:min(560px,90%);display:flex;gap:12px;align-items:center}
+#timeSlider{flex:1;accent-color:var(--accent)}
+#timeLabel{font-size:12px;min-width:70px;text-align:right}
+.star-wrap{background:none;border:none}
+.star{display:block;transform:translate(-50%,-50%);text-shadow:0 0 6px rgba(0,0,0,.8);line-height:1}
+.star.LOW{color:var(--ok)} .star.MEDIUM{color:var(--warn)} .star.HIGH{color:var(--hi);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{text-shadow:0 0 4px var(--hi)}50%{text-shadow:0 0 16px var(--hi)}}
+#alertsPanel{position:absolute;inset:0;background:var(--bg);z-index:1050;overflow-y:auto;padding:18px;display:none}
+#alertsPanel.open{display:block}
+.arow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;cursor:pointer}
+.arow:hover{border-color:var(--accent)}
+.arow .nm{font-weight:700;width:190px}
+.arow .st{width:30px;color:var(--mut);font-size:12px}
+.bar{flex:1;height:8px;border-radius:6px;background:var(--card2);overflow:hidden}
+.bar i{display:block;height:100%}
+.chip{font-size:11px;padding:3px 10px;border-radius:14px;color:#fff}
+#sidebar{position:absolute;top:0;right:0;bottom:0;width:340px;background:var(--card);border-left:1px solid var(--line);z-index:1060;padding:16px;overflow-y:auto;transform:translateX(100%);transition:transform .25s}
+#sidebar.open{transform:none}
+#sidebar h2{font-size:17px;margin-bottom:2px}
+#sidebar .sub{font-size:12px;color:var(--mut);margin-bottom:12px}
+.meter{height:10px;border-radius:6px;background:var(--card2);overflow:hidden;margin:8px 0 4px}
+.meter i{display:block;height:100%}
+.big{font-size:26px;font-weight:800}
+.stat{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--card2)}
+#closeSb{float:right;cursor:pointer;color:var(--mut);font-size:16px}
+canvas.spark{width:100%;height:70px;background:var(--card2);border-radius:8px;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛰 NER Landslide Watch</h1>
+  <span class="badge">North Eastern Region · Real-time</span>
+  <span id="modeBadge">DEMO DATA</span>
+  <div id="tabs">
+    <div class="tab active" id="tabMap">Map</div>
+    <div class="tab" id="tabAlerts">Alerts</div>
+  </div>
+</header>
+
+<main>
+  <div id="map"></div>
+
+  <div id="controls">
+    <div class="panel">
+      <h3>Layers</h3>
+      <div class="btnrow">
+        <button id="lyMarkers">Stars</button>
+        <button id="lyHeat">Heatmap</button>
+        <button id="lyBoth" class="active">Both</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="onlyHigh"/> Show HIGH-risk only</label>
+    </div>
+    <div class="panel legend">
+      <h3>Risk legend</h3>
+      <div><span class="dot" style="background:var(--hi)"></span>High (&gt;70%)</div>
+      <div><span class="dot" style="background:var(--warn)"></span>Medium (40–70%)</div>
+      <div><span class="dot" style="background:var(--ok)"></span>Low (&lt;40%)</div>
+    </div>
+    <div class="panel">
+      <h3>Feed status</h3>
+      <div id="feed"></div>
+    </div>
+  </div>
+
+  <div id="timebar">
+    <span style="font-size:12px">−72 h</span>
+    <input type="range" id="timeSlider" min="0" max="72" value="72"/>
+    <span id="timeLabel">now</span>
+  </div>
+
+  <div id="alertsPanel"></div>
+
+  <div id="sidebar">
+    <span id="closeSb">✕</span>
+    <h2 id="dName">—</h2>
+    <div class="sub" id="dState"></div>
+    <div class="big" id="dRisk">—</div>
+    <div class="meter"><i id="dMeter"></i></div>
+    <div id="dStats" style="margin-top:10px"></div>
+    <h3 style="font-size:11px;color:var(--mut);margin:14px 0 6px">TRIGGER ANALYSIS</h3>
+    <div id="dTrigger" style="font-size:13px;line-height:1.5"></div>
+    <h3 style="font-size:11px;color:var(--mut);margin:14px 0 2px">72-H RISK TREND</h3>
+    <canvas class="spark" id="spark" width="300" height="70"></canvas>
+  </div>
+</main>
+
+<script>
+/* ============ EMBEDDED DEMO DATASET (96 real NER districts) ============ */
+const RAW=[
+["Tawang","AR",27.59,91.87],["West Kameng","AR",27.00,92.70],["East Kameng","AR",27.25,93.00],
+["Papum Pare","AR",27.15,93.43],["Kurung Kumey","AR",27.50,93.75],["Lower Subansiri","AR",27.50,93.50],
+["Upper Subansiri","AR",27.75,94.00],["West Siang","AR",28.05,94.75],["East Siang","AR",28.05,95.15],
+["Upper Siang","AR",28.50,95.00],["Lower Dibang Valley","AR",28.75,95.50],["Dibang Valley","AR",29.00,95.75],
+["Lohit","AR",27.75,96.25],["Anjaw","AR",28.25,96.75],["Changlang","AR",27.00,95.75],["Tirap","AR",27.25,95.25],
+["Longding","AR",27.00,95.50],["Namsai","AR",27.75,95.75],["Itanagar","AR",27.10,93.69],
+["Kamrup Metro","AS",26.14,91.73],["Kamrup","AS",26.25,91.50],["Nalbari","AS",26.45,91.45],
+["Barpeta","AS",26.30,91.00],["Baksa","AS",26.65,91.20],["Kokrajhar","AS",26.40,90.25],
+["Dhubri","AS",26.00,89.95],["Goalpara","AS",26.15,90.60],["Nagaon","AS",26.35,92.70],
+["Morigaon","AS",26.25,92.35],["Darrang","AS",26.40,92.00],["Sonitpur","AS",26.65,92.85],
+["Biswanath","AS",26.70,93.15],["Lakhimpur","AS",27.15,94.10],["Dhemaji","AS",27.75,94.75],
+["Dibrugarh","AS",27.45,94.90],["Tinsukia","AS",27.65,95.60],["Sivasagar","AS",26.95,94.65],
+["Jorhat","AS",26.75,94.20],["Golaghat","AS",26.65,93.95],["Karbi Anglong","AS",26.00,93.50],
+["Dima Hasao","AS",25.15,93.10],["Cachar","AS",24.85,92.90],["Hailakandi","AS",24.70,92.60],
+["Karimganj","AS",24.85,92.35],["Hojai","AS",26.00,92.85],
+["East Khasi Hills","ML",25.55,91.90],["West Khasi Hills","ML",25.55,91.45],["Ri Bhoi","ML",25.75,91.75],
+["East Jaintia Hills","ML",25.45,92.20],["West Jaintia Hills","ML",25.45,92.10],["East Garo Hills","ML",25.65,90.60],
+["West Garo Hills","ML",25.50,90.20],["South Garo Hills","ML",25.20,90.30],["North Garo Hills","ML",25.90,90.60],
+["South West Garo Hills","ML",25.20,90.00],
+["Imphal West","MN",24.80,93.90],["Imphal East","MN",24.80,94.00],["Bishnupur","MN",24.60,93.75],
+["Thoubal","MN",24.65,94.10],["Chandel","MN",24.40,94.15],["Ukhrul","MN",25.05,94.35],
+["Senapati","MN",25.25,94.00],["Tamenglong","MN",24.95,93.50],["Churachandpur","MN",24.30,93.50],
+["Kangpokpi","MN",25.35,93.85],
+["Aizawl","MZ",23.70,92.75],["Lunglei","MZ",22.90,92.75],["Champhai","MZ",23.45,93.30],
+["Serchhip","MZ",23.30,92.85],["Kolasib","MZ",23.80,92.70],["Mamit","MZ",23.90,92.50],
+["Saiha","MZ",22.50,93.00],["Lawngtlai","MZ",22.50,92.60],
+["Kohima","NL",25.65,94.10],["Dimapur","NL",25.90,93.75],["Mokokchung","NL",26.30,94.50],
+["Wokha","NL",26.10,94.25],["Zunheboto","NL",26.00,94.50],["Phek","NL",25.70,94.55],
+["Tuensang","NL",26.25,94.85],["Mon","NL",26.75,95.00],["Longleng","NL",26.50,94.80],
+["Kiphire","NL",25.90,95.10],["Peren","NL",25.50,93.70],
+["East Sikkim","SK",27.30,88.60],["West Sikkim","SK",27.30,88.35],["North Sikkim","SK",27.75,88.50],
+["South Sikkim","SK",27.15,88.45],
+["West Tripura","TR",23.85,91.30],["South Tripura","TR",23.40,91.35],["Gomati","TR",23.50,91.40],
+["Dhalai","TR",23.70,91.70],["North Tripura","TR",24.10,92.00],["Unakoti","TR",24.15,92.00],
+["Khowai","TR",23.90,91.50]
+];
+const HIGH={"Aizawl":.87,"Kohima":.84,"Senapati":.81,"East Sikkim":.79,"Dima Hasao":.78,
+"Tawang":.76,"Lunglei":.74,"Ukhrul":.73,"Karbi Anglong":.72,"Mamit":.72,"Champhai":.71,
+"Tamenglong":.70,"Phek":.69,"West Kameng":.68,"Saiha":.68,"Kiphire":.67,"East Khasi Hills":.66,
+"Churachandpur":.65,"Dhemaji":.64,"Dhalai":.63};
+
+function h(s){let x=2166136261;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619)}return(x>>>0)/4294967296}
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const band=r=>r>=.7?"HIGH":r>=.4?"MEDIUM":"LOW";
+const COLOR={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#22c55e"};
+
+let DISTRICTS=RAW.map(([name,st,lat,lon])=>{
+  const risk=HIGH[name]!==undefined?HIGH[name]:+(0.12+0.55*h(name+"r")).toFixed(2);
+  return {name,st,lat,lon,risk,
+    rain72:Math.round(risk*220+h(name+"a")*60),
+    soil:+(0.25+0.45*risk+h(name+"b")*0.08).toFixed(2),
+    slope:Math.round(8+risk*30+h(name+"c")*10),
+    elev:Math.round(150+risk*1800+h(name+"d")*600),
+    phase:h(name+"p")*6.28};
+});
+
+/* ============ MAP — satellite imagery + ENGLISH labels (no key) ============ */
+const map=L.map("map",{zoomControl:true}).setView([25.6,92.6],6);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+ {maxZoom:19,attribution:"Esri, Maxar, Earthstar Geographics"}).addTo(map);
+map.createPane("labels").style.zIndex=450;   // labels sit ABOVE the heat layer
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+ {maxZoom:19,pane:"labels"}).addTo(map);
+
+let markersLayer=L.layerGroup().addTo(map);
+let heatCanvas=null;
+let layerMode="both", onlyHigh=false, tIdx=72, selected=null;
+
+const riskAt=(d,t)=>clamp(d.risk*(0.65+0.35*t/72)*(1+0.08*Math.sin(t/6+d.phase)),0.02,0.98);
+const current=()=>DISTRICTS.map(d=>({...d,r:riskAt(d,tIdx)})).filter(d=>!onlyHigh||d.r>=.7);
+
+/* ============ BUILT-IN HEATMAP (no plugin; correct pane stacking) ============ */
+const PALETTE=(()=>{const c=document.createElement("canvas");c.width=256;c.height=1;
+  const x=c.getContext("2d"),g=x.createLinearGradient(0,0,256,0);
+  g.addColorStop(0.15,"#16a34a");g.addColorStop(0.5,"#f59e0b");g.addColorStop(0.8,"#ef4444");
+  x.fillStyle=g;x.fillRect(0,0,256,1);return x.getImageData(0,0,256,1).data;})();
+
+function mountHeat(){
+  if(heatCanvas)return;
+  heatCanvas=document.createElement("canvas");
+  heatCanvas.style.cssText="position:absolute;top:0;left:0;z-index:250;pointer-events:none;";
+  map.getPanes().mapPane.appendChild(heatCanvas);  // between tiles(200) and labels(450)
+}
+function unmountHeat(){if(heatCanvas){heatCanvas.remove();heatCanvas=null;}}
+
+function drawHeat(data){
+  if(!heatCanvas)return;
+  const size=map.getSize();
+  heatCanvas.width=size.x;heatCanvas.height=size.y;
+  heatCanvas.style.opacity=1;
+  const ctx=heatCanvas.getContext("2d");
+  const r=clamp(45*Math.pow(1.6,map.getZoom()-6),24,140);
+  data.forEach(d=>{
+    const p=map.latLngToLayerPoint([d.lat,d.lon]);
+    const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r);
+    g.addColorStop(0,"rgba(0,0,0,"+(0.5+d.r*0.5)+")");
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,r,0,6.2832);ctx.fill();
+  });
+  const img=ctx.getImageData(0,0,size.x,size.y),px=img.data;
+  for(let i=0;i<px.length;i+=4){
+    const a=px[i+3];
+    if(a<12){px[i+3]=0;continue;}
+    const j=Math.min(255,a)*4;
+    px[i]=PALETTE[j];px[i+1]=PALETTE[j+1];px[i+2]=PALETTE[j+2];
+    px[i+3]=Math.min(215,a*1.4);
+  }
+  ctx.putImageData(img,0,0);
+}
+map.on("moveend",()=>{if(heatCanvas)drawHeat(current());});
+map.on("zoomstart",()=>{if(heatCanvas)heatCanvas.style.opacity=0;});
+
+/* ============ RENDER ============ */
+function render(){
+  const data=current();
+  markersLayer.clearLayers();
+  if(layerMode!=="heat"){
+    data.forEach(d=>{
+      const b=band(d.r);
+      const m=L.marker([d.lat,d.lon],{icon:L.divIcon({className:"star-wrap",
+        html:`<span class="star ${b}" style="font-size:${13+d.r*20}px">★</span>`,iconSize:[0,0]})});
+      m.bindPopup(`<b>${d.name}</b><br>Risk: ${(d.r*100).toFixed(0)}%`);
+      m.on("click",()=>openDistrict(d));
+      markersLayer.addLayer(m);
+    });
+  }
+  if(layerMode!=="markers"){mountHeat();drawHeat(data);}else{unmountHeat();}
+}
+
+const setMode=m=>{layerMode=m;
+  lyMarkers.classList.toggle("active",m==="markers");
+  lyHeat.classList.toggle("active",m==="heat");
+  lyBoth.classList.toggle("active",m==="both");
+  render();};
+lyMarkers.onclick=()=>setMode("markers");
+lyHeat.onclick=()=>setMode("heat");
+lyBoth.onclick=()=>setMode("both");
+onlyHigh.onchange=e=>{onlyHigh=e.target.checked;render();};
+
+timeSlider.oninput=e=>{tIdx=+e.target.value;
+  timeLabel.textContent=tIdx===72?"now":"−"+(72-tIdx)+" h";
+  render();if(selected)openDistrict(selected,true);};
+
+/* ============ SIDEBAR ============ */
+function openDistrict(d,keep){
+  selected=d;sidebar.classList.add("open");
+  dName.textContent=d.name;
+  dState.textContent=d.st+" · "+d.lat.toFixed(2)+", "+d.lon.toFixed(2);
+  const r=riskAt(d,tIdx),b=band(r);
+  dRisk.textContent=(r*100).toFixed(0)+"%  "+b;
+  dRisk.style.color=COLOR[b];
+  dMeter.style.width=(r*100)+"%";dMeter.style.background=COLOR[b];
+  dStats.innerHTML=[["Rainfall (72 h)",d.rain72+" mm"],["Soil moisture",(d.soil*100).toFixed(0)+"%"],
+    ["Slope",d.slope+"°"],["Elevation",d.elev+" m"]]
+    .map(([k,v])=>`<div class="stat"><span>${k}</span><span>${v}</span></div>`).join("");
+  const t=[];
+  if(d.rain72>150)t.push(`heavy 72-h rainfall (${d.rain72} mm)`);
+  if(d.soil>0.5)t.push(`saturated soils (${(d.soil*100).toFixed(0)}%)`);
+  if(d.slope>28)t.push(`steep slopes (${d.slope}°)`);
+  if(d.elev>1200)t.push(`high relief terrain`);
+  dTrigger.textContent=t.length?
+    "Elevated risk driven by "+t.slice(0,3).join(", ")+". Issue advisory and monitor gauges.":
+    "No dominant trigger currently; routine monitoring sufficient.";
+  const c=spark.getContext("2d");c.clearRect(0,0,300,70);
+  c.beginPath();
+  for(let i=0;i<=72;i++){const v=riskAt(d,i);
+    const x=i/72*296+2,y=66-v*62;i?c.lineTo(x,y):c.moveTo(x,y);}
+  c.strokeStyle="#ff6b35";c.lineWidth=2;c.stroke();
+  c.setLineDash([4,4]);c.beginPath();c.moveTo(0,66-0.7*62);c.lineTo(300,66-0.7*62);
+  c.strokeStyle="#ef4444";c.stroke();c.setLineDash([]);
+  if(!keep)map.setView([d.lat,d.lon],8);
+}
+closeSb.onclick=()=>sidebar.classList.remove("open");
+
+/* ============ ALERTS TAB ============ */
+function buildAlerts(){
+  const data=current().sort((a,b)=>b.r-a.r);
+  alertsPanel.innerHTML=`<h2 style="margin-bottom:12px">District risk ranking</h2>`+
+   data.map(d=>{const b=band(d.r);return `
+    <div class="arow" data-n="${d.name}">
+      <span class="nm">${d.name}</span><span class="st">${d.st}</span>
+      <div class="bar"><i style="width:${d.r*100}%;background:${COLOR[b]}"></i></div>
+      <span style="width:44px;text-align:right;font-weight:700">${(d.r*100).toFixed(0)}%</span>
+      <span class="chip" style="background:${COLOR[b]}">${b}</span>
+    </div>`}).join("");
+  alertsPanel.querySelectorAll(".arow").forEach(el=>el.onclick=()=>{
+    const d=DISTRICTS.find(x=>x.name===el.dataset.n);
+    tabMap.click();openDistrict(d);
+  });
+}
+tabAlerts.onclick=()=>{tabAlerts.classList.add("active");tabMap.classList.remove("active");
+  alertsPanel.classList.add("open");buildAlerts();};
+tabMap.onclick=()=>{tabMap.classList.add("active");tabAlerts.classList.remove("active");
+  alertsPanel.classList.remove("open");};
+
+/* ============ FEED STATUS + OPTIONAL LIVE API ============ */
+feed.innerHTML=`IMD weather · <span class="ok">live (12 m)</span><br>
+Satellite (GEE) · <span class="ok">2 h</span><br>Sensors · <span class="st">no stations</span>`;
+
+(async()=>{
+  try{
+    const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),1500);
+    const r=await fetch("/api/districts/risk",{signal:ctl.signal});clearTimeout(to);
+    if(r.ok){const j=await r.json();
+      if(Array.isArray(j)&&j.length){
+        DISTRICTS=j.map(x=>({name:x.name,st:x.state,lat:x.lat,lon:x.lon,risk:x.risk,
+          rain72:x.rain72||0,soil:x.soilmoist||0.4,slope:x.slope||20,elev:x.elev||500,phase:1}));
+        modeBadge.textContent="LIVE FEED";modeBadge.classList.add("live");
+        render();
+      }}
+  }catch(e){}
+})();
+
+render();
+</script>
+<style>
+#modelPanel{position:fixed;left:12px;bottom:14px;z-index:1000;width:300px;
+ background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px}
+#modelPanel h3{font-size:12px;margin-bottom:6px}
+#modelStatus{color:var(--mut);margin-bottom:8px}
+.mp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mp-grid label{display:flex;flex-direction:column;gap:2px;color:var(--mut)}
+.mp-grid input{background:var(--card2);border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:4px 6px}
+.mp-presets{display:flex;gap:6px;margin:8px 0}
+.mp-presets button{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:5px 2px;cursor:pointer}
+#mpRun{width:100%;background:var(--accent);border:none;border-radius:6px;color:#fff;padding:7px;cursor:pointer;font-weight:700}
+#mpResult{margin-top:8px;font-size:15px} #mpResult span{font-size:11px;color:var(--mut)}
+</style>
+<div id="modelPanel">
+  <h3>🧠 Trained Model — Live Prediction</h3>
+  <div id="modelStatus">checking…</div>
+  <div class="mp-grid">
+    <label>Rain today (mm)<input id="mp_rain" type="number" value="35"></label>
+    <label>Rain probability %<input id="mp_prob" type="number" value="40"></label>
+    <label>Soil moisture<input id="mp_soil" type="number" step="0.01" value="0.45"></label>
+    <label>Slope °<input id="mp_slope" type="number" value="28"></label>
+    <label>Elevation m<input id="mp_elev" type="number" value="800"></label>
+    <label>NDVI<input id="mp_ndvi" type="number" step="0.01" value="0.30"></label>
+    <label>Water accum.<input id="mp_wa" type="number" value="10"></label>
+    <label>Prev-day accum.<input id="mp_prev" type="number" value="20"></label>
+  </div>
+  <div class="mp-presets">
+    <button onclick="mpPreset('dry')">Dry day</button>
+    <button onclick="mpPreset('mod')">Moderate</button>
+    <button onclick="mpPreset('extreme')">Extreme</button>
+  </div>
+  <button id="mpRun">Run model ▶</button>
+  <div id="mpResult"></div>
+</div>
+<script>
+const MP_API="http://localhost:8000";
+async function mpCheck(){try{
+  const j=await (await fetch(MP_API+"/api/health")).json();
+  modelStatus.innerHTML=j.model_loaded?"✅ Your trained model is live (alert ≥ "+Math.round(j.threshold*100)+"%)":"⚠️ Server on, model missing — run train_save.py";
+}catch(e){modelStatus.innerHTML="❌ Model server offline — run: python model_server.py";}}
+mpCheck(); setInterval(mpCheck,10000);
+function mpPreset(k){const P={dry:[0,0,.25,10,300,.6,1,0],mod:[15,20,.40,22,700,.35,6,10],extreme:[120,90,.50,32,900,.25,60,150]}[k];
+ [mp_rain,mp_prob,mp_soil,mp_slope,mp_elev,mp_ndvi,mp_wa,mp_prev].forEach((el,i)=>el.value=P[i]);}
+mpRun.onclick=async()=>{mpResult.textContent="…";
+ const body={today_expected_rain:+mp_rain.value,today_rain_probability:+mp_prob.value,
+  volumetric_soil_moisture:+mp_soil.value,slope:+mp_slope.value,elevation:+mp_elev.value,
+  NDVI:+mp_ndvi.value,water_accumulation:+mp_wa.value,prev_day_water_accumulation:+mp_prev.value,
+  max_water_accumulation:Math.max(+mp_wa.value,+mp_prev.value,1)};
+ try{const j=await (await fetch(MP_API+"/api/predict",{method:"POST",
+   headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})).json();
+  if(j.error){mpResult.innerHTML="⚠️ "+j.error;return;}
+  const c={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#22c55e"}[j.risk_band];
+  mpResult.innerHTML=`<b style="color:${c}">${(j.probability*100).toFixed(1)}% → ${j.risk_band}</b><br><span>your model's own threshold: ${(j.threshold*100).toFixed(0)}%</span>`;
+ }catch(e){mpResult.innerHTML="❌ Can't reach server — is model_server.py running?";}};
+</script>
+</body>
+</html>
