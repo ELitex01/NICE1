@@ -1,0 +1,22 @@
+{
+  "threshold": 0.68,
+  "features": [
+    "Map",
+    "NDVI",
+    "aspect",
+    "elevation",
+    "max_water_accumulation",
+    "slope",
+    "soil_temperature",
+    "today_expected_rain",
+    "today_rain_probability",
+    "volumetric_soil_moisture",
+    "water_accumulation",
+    "expected_accumulation",
+    "TWI"
+  ],
+  "trained_at": "2026-09-04T03:33:55.400914+00:00",
+  "train_rows": 10000,
+  "test_accuracy": 0.9035,
+  "test_recall": 0.9012
+}
