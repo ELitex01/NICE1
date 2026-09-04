@@ -1,0 +1,15 @@
+groups:
+  - name: landslide-ews
+    rules:
+      - alert: ModelRecallBelowTarget
+        expr: live_recall < 0.90
+        for: 24h
+        labels: {severity: critical}
+        annotations:
+          summary: "Live recall dropped below 90 % — retrain required"
+      - alert: WeatherFeedStale
+        expr: feed_age_seconds{source="weather"} > 3600
+        labels: {severity: warning}
+      - alert: PredictionDrift
+        expr: psi_score > 0.2
+        labels: {severity: warning}

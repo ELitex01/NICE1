@@ -1,5 +1,0 @@
-{
-  "HIGH": "🚨 LANDSLIDE WARNING: {district} is at HIGH risk ({prob}%). Evacuate low-lying and slope areas immediately. Move to the nearest shelter. Helpline: 1800-XXX-XXXX.",
-  "MEDIUM": "⚠️ Landslide ADVISORY: {district} is at elevated risk ({prob}%). Avoid hillside travel, stay alert, monitor official channels.",
-  "LOW": "Landslide risk in {district} is currently low ({prob}%). Stay informed."
-}

@@ -1,0 +1,63 @@
+{
+  "model_type": "SoftVotingEnsemble(DT+RF+GB+XGB)",
+  "trained_at": "2026-09-04T08:19:12.569977+00:00",
+  "threshold": 0.7,
+  "features": [
+    "Map",
+    "NDVI",
+    "aspect",
+    "elevation",
+    "max_water_accumulation",
+    "prev_day_water_accumulation",
+    "slope",
+    "soil_temperature",
+    "today_expected_rain",
+    "today_rain_probability",
+    "volumetric_soil_moisture",
+    "water_accumulation",
+    "expected_accumulation",
+    "TWI"
+  ],
+  "train_rows": 10000,
+  "ensemble_accuracy": 0.8954,
+  "ensemble_recall": 0.8726,
+  "ensemble_f1": 0.8929594760540319,
+  "leaderboard": [
+    {
+      "Model": "Decision Tree",
+      "Best F1 Score": 0.8655077767612077,
+      "Optimal Threshold": 0.7
+    },
+    {
+      "Model": "Random Forest",
+      "Best F1 Score": 0.885191691639971,
+      "Optimal Threshold": 0.7
+    },
+    {
+      "Model": "Gradient Boost",
+      "Best F1 Score": 0.912621359223301,
+      "Optimal Threshold": 0.7
+    },
+    {
+      "Model": "XGBoost",
+      "Best F1 Score": 0.8612585291887794,
+      "Optimal Threshold": 0.7
+    }
+  ],
+  "feature_importance": {
+    "slope": 0.2393999993801117,
+    "soil_temperature": 0.20990000665187836,
+    "elevation": 0.11599999666213989,
+    "Map": 0.07460000365972519,
+    "volumetric_soil_moisture": 0.05719999969005585,
+    "NDVI": 0.04500000178813934,
+    "expected_accumulation": 0.03709999844431877,
+    "prev_day_water_accumulation": 0.035999998450279236,
+    "today_expected_rain": 0.03460000082850456,
+    "today_rain_probability": 0.03189999982714653,
+    "max_water_accumulation": 0.03139999881386757,
+    "TWI": 0.029999999329447746,
+    "water_accumulation": 0.028599999845027924,
+    "aspect": 0.0284000001847744
+  }
+}
