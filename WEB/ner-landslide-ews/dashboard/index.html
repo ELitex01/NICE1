@@ -3,79 +3,153 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>NER Landslide Watch</title>
+<title>PRAGATI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-:root{--bg:#0f1117;--card:#181c26;--card2:#232838;--line:#2a2f3d;--accent:#ff6b35;
---ok:#22c55e;--warn:#f59e0b;--hi:#ef4444;--txt:#e5e7eb;--mut:#9ca3af}
+:root{
+  --bg:#0a0c12;--bg2:#0d1018;
+  --card:#161b26;--card2:#1e2433;--card3:#262e42;--line:#2a3142;--line2:#3a4358;
+  --accent:#ff6b35;--accent2:#ff8f5c;--accent-glow:rgba(255,107,53,.35);
+  --brand1:#6d5bff;--brand2:#00c2ff;
+  --ok:#22c55e;--warn:#f59e0b;--hi:#ef4444;--txt:#eef0f5;--mut:#8b93a7}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-header{padding:10px 18px;display:flex;align-items:center;gap:14px;background:var(--card);border-bottom:1px solid var(--line);z-index:1100}
-header h1{font-size:18px}
-.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:#2563eb}
-#modeBadge{font-size:11px;padding:3px 10px;border-radius:20px;background:#444}
-#modeBadge.live{background:var(--ok);color:#042210}
-#tabs{display:flex;gap:8px;margin-left:auto}
-.tab{padding:6px 16px;border-radius:8px;cursor:pointer;font-size:13px;background:var(--card2)}
-.tab.active{background:var(--accent);color:#fff}
+body{font-family:"Manrope",system-ui,Segoe UI,sans-serif;background:
+  radial-gradient(1100px 500px at 15% -10%, rgba(109,91,255,.16), transparent 55%),
+  radial-gradient(900px 480px at 100% 0%, rgba(0,194,255,.12), transparent 50%),
+  var(--bg);
+  color:var(--txt);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ===== HEADER ===== */
+header{padding:12px 20px;display:flex;align-items:center;gap:14px;
+  background:linear-gradient(180deg,rgba(22,27,38,.96),rgba(15,18,26,.94));
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);z-index:1100;
+  box-shadow:0 2px 18px rgba(0,0,0,.35)}
+header h1{font-family:"Sora",system-ui,sans-serif;font-size:20px;font-weight:800;letter-spacing:.02em;
+  display:flex;align-items:center;gap:9px;
+  background:linear-gradient(95deg,#fff 20%,var(--accent2) 60%,var(--brand2) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+header h1 .logo-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 0 var(--accent-glow);animation:pulseDot 2.2s infinite}
+@keyframes pulseDot{0%{box-shadow:0 0 0 0 var(--accent-glow)}70%{box-shadow:0 0 0 9px rgba(255,107,53,0)}100%{box-shadow:0 0 0 0 rgba(255,107,53,0)}}
+.badge{font-size:11px;font-weight:700;letter-spacing:.03em;padding:4px 12px;border-radius:20px;
+  background:linear-gradient(95deg,var(--brand1),var(--brand2));color:#fff;box-shadow:0 2px 10px rgba(109,91,255,.35)}
+#modeBadge{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:var(--card3);
+  border:1px solid var(--line2);color:var(--mut);transition:background .2s,color .2s}
+#modeBadge.live{background:linear-gradient(95deg,#16a34a,var(--ok));color:#042210;border-color:transparent;
+  box-shadow:0 2px 10px rgba(34,197,94,.35)}
+#tabs{display:flex;gap:6px;margin-left:auto;background:var(--card2);padding:4px;border-radius:12px;border:1px solid var(--line)}
+.tab{padding:7px 16px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:var(--mut);
+  transition:background .18s,color .18s,transform .12s}
+.tab:hover{color:var(--txt)}
+.tab.active{background:linear-gradient(95deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 3px 12px var(--accent-glow)}
+
 main{flex:1;position:relative}
 #map{position:absolute;inset:0;background:#0d0f14}
-#controls{position:absolute;top:12px;right:12px;z-index:1000;display:flex;flex-direction:column;gap:8px;width:220px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
-.panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-bottom:8px}
+#controls{position:absolute;top:14px;right:14px;z-index:1000;display:flex;flex-direction:column;gap:10px;width:230px}
+.panel{background:linear-gradient(165deg,rgba(22,27,38,.92),rgba(18,22,32,.92));backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.28);
+  transition:border-color .2s}
+.panel:hover{border-color:var(--line2)}
+.panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:9px;font-weight:700}
 .btnrow{display:flex;gap:6px}
-.btnrow button{flex:1;padding:6px 4px;font-size:11px;border-radius:6px;border:1px solid var(--line);background:var(--card2);color:var(--txt);cursor:pointer}
-.btnrow button.active{background:var(--accent);border-color:var(--accent);color:#fff}
-label.chk{display:flex;gap:6px;align-items:center;font-size:12px;margin-top:8px;cursor:pointer}
-.legend div{font-size:12px;margin:4px 0;display:flex;align-items:center;gap:8px}
+.btnrow button{flex:1;padding:7px 4px;font-size:11px;font-weight:600;border-radius:8px;border:1px solid var(--line);
+  background:var(--card2);color:var(--txt);cursor:pointer;transition:all .15s}
+.btnrow button:hover{border-color:var(--accent);color:var(--accent2)}
+.btnrow button.active{background:linear-gradient(95deg,var(--accent),var(--accent2));border-color:transparent;color:#fff;
+  box-shadow:0 2px 10px var(--accent-glow)}
+label.chk{display:flex;gap:7px;align-items:center;font-size:12px;margin-top:9px;cursor:pointer;color:var(--txt)}
+label.chk input{accent-color:var(--accent)}
+.legend div{font-size:12px;margin:5px 0;display:flex;align-items:center;gap:8px}
 .legend img{width:22px;height:22px;object-fit:contain}
-#feed{font-size:11px;color:var(--mut);line-height:1.7}
-#feed .ok{color:var(--ok)} #feed .st{color:var(--hi)}
-#timebar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:1000;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;width:min(560px,90%);display:flex;gap:12px;align-items:center}
+#feed{font-size:11px;color:var(--mut);line-height:1.8}
+#feed .ok{color:var(--ok);font-weight:700} #feed .st{color:var(--hi);font-weight:700}
+#timebar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:1000;
+  background:linear-gradient(165deg,rgba(22,27,38,.94),rgba(18,22,32,.94));backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:14px;padding:10px 16px;width:min(560px,90%);
+  display:flex;gap:12px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.32)}
 #timeSlider{flex:1;accent-color:var(--accent)}
-#timeLabel{font-size:12px;min-width:70px;text-align:right}
-#alertsPanel{position:absolute;inset:0;background:var(--bg);z-index:1050;overflow-y:auto;padding:18px;display:none}
-#alertsPanel.open{display:block}
-.arow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;cursor:pointer}
-.arow:hover{border-color:var(--accent)}
+#timeLabel{font-size:12px;min-width:70px;text-align:right;font-weight:700;color:var(--accent2)}
+
+#alertsPanel,#modelPanel{position:absolute;inset:0;background:var(--bg);z-index:1050;overflow-y:auto;padding:22px;display:none}
+#alertsPanel.open,#modelPanel.open{display:block}
+.arow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:11px 15px;margin-bottom:9px;cursor:pointer;transition:transform .12s,border-color .15s,box-shadow .15s}
+.arow:hover{border-color:var(--accent);transform:translateX(2px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .arow .nm{font-weight:700;width:190px}
 .arow .st{width:30px;color:var(--mut);font-size:12px}
 .arow img{width:26px;height:26px;object-fit:contain}
 .bar{flex:1;height:8px;border-radius:6px;background:var(--card2);overflow:hidden}
 .bar i{display:block;height:100%}
-.chip{font-size:11px;padding:3px 10px;border-radius:14px;color:#fff}
-#sidebar{position:absolute;top:0;right:0;bottom:0;width:340px;background:var(--card);border-left:1px solid var(--line);z-index:1060;padding:16px;overflow-y:auto;transform:translateX(100%);transition:transform .25s}
+.chip{font-size:11px;font-weight:700;padding:3px 10px;border-radius:14px;color:#fff}
+#sidebar{position:absolute;top:0;right:0;bottom:0;width:340px;
+  background:linear-gradient(165deg,rgba(22,27,38,.97),rgba(15,18,26,.97));backdrop-filter:blur(10px);
+  border-left:1px solid var(--line);z-index:1060;padding:18px;overflow-y:auto;
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);box-shadow:-8px 0 30px rgba(0,0,0,.35)}
 #sidebar.open{transform:none}
-#sidebar h2{font-size:17px;margin-bottom:2px}
+#sidebar h2{font-family:"Sora",sans-serif;font-size:18px;margin-bottom:2px}
 #sidebar .sub{font-size:12px;color:var(--mut);margin-bottom:12px}
 .meter{height:10px;border-radius:6px;background:var(--card2);overflow:hidden;margin:8px 0 4px}
-.meter i{display:block;height:100%}
-.big{font-size:26px;font-weight:800}
-.stat{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--card2)}
-#closeSb{float:right;cursor:pointer;color:var(--mut);font-size:16px}
-canvas.spark{width:100%;height:70px;background:var(--card2);border-radius:8px;margin-top:8px}
-#modelPanel{position:fixed;left:12px;bottom:14px;z-index:1000;width:300px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px}
-#modelPanel h3{font-size:12px;margin-bottom:6px}
-#modelStatus{color:var(--mut);margin-bottom:8px}
-.mp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.mp-grid label{display:flex;flex-direction:column;gap:2px;color:var(--mut)}
-.mp-grid input{background:var(--card2);border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:4px 6px}
-.mp-presets{display:flex;gap:6px;margin:8px 0}
-.mp-presets button{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:6px;color:var(--txt);padding:5px 2px;cursor:pointer}
+.meter i{display:block;height:100%;transition:width .3s}
+.big{font-size:27px;font-weight:800;font-family:"Sora",sans-serif}
+.stat{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--card2)}
+#closeSb{float:right;cursor:pointer;color:var(--mut);font-size:18px;width:28px;height:28px;display:flex;
+  align-items:center;justify-content:center;border-radius:50%;transition:background .15s,color .15s}
+#closeSb:hover{background:var(--card2);color:var(--txt)}
+canvas.spark{width:100%;height:70px;background:var(--card2);border-radius:10px;margin-top:8px}
 
-#mpRun{width:100%;background:var(--accent);border:none;border-radius:6px;color:#fff;padding:7px;cursor:pointer;font-weight:700}
-#mpResult{margin-top:8px;font-size:15px} #mpResult span{font-size:11px;color:var(--mut)}
+/* ===== MODEL TAB (full-page panel, like Alerts) ===== */
+.mp-wrap{max-width:760px;margin:0 auto}
+.mp-hero{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.mp-hero .ic{font-size:30px;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--brand1),var(--brand2));box-shadow:0 6px 20px rgba(109,91,255,.35)}
+.mp-hero h2{font-family:"Sora",sans-serif;font-size:20px}
+.mp-hero .sub{font-size:12px;color:var(--mut);margin-top:2px}
+.mp-card{background:linear-gradient(165deg,rgba(22,27,38,.94),rgba(18,22,32,.94));border:1px solid var(--line);
+  border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+#modelPanel h3{font-size:12px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700}
+#modelStatus{font-size:13px;color:var(--mut);margin-bottom:10px;padding:9px 12px;background:var(--card2);
+  border-radius:10px;border:1px solid var(--line)}
+.mp-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.mp-grid label{display:flex;flex-direction:column;gap:5px;color:var(--mut);font-size:11px;font-weight:600}
+.mp-grid input{background:var(--card2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 9px;
+  font-size:13px;transition:border-color .15s,box-shadow .15s}
+.mp-grid input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.mp-presets{display:flex;gap:8px;margin:12px 0}
+.mp-presets button{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:9px;color:var(--txt);
+  padding:9px 4px;cursor:pointer;font-weight:600;font-size:12.5px;transition:all .15s}
+.mp-presets button:hover{border-color:var(--accent);color:var(--accent2);transform:translateY(-1px)}
+
+#mpRun{width:100%;background:linear-gradient(95deg,var(--accent),var(--accent2));border:none;border-radius:10px;
+  color:#fff;padding:12px;cursor:pointer;font-weight:800;font-size:14px;letter-spacing:.02em;
+  box-shadow:0 6px 20px var(--accent-glow);transition:transform .12s,box-shadow .12s}
+#mpRun:hover{transform:translateY(-1px);box-shadow:0 8px 24px var(--accent-glow)}
+#mpResult{margin-top:12px;font-size:17px;font-weight:700} #mpResult span{font-size:11px;color:var(--mut);font-weight:500}
+#mpSources{font-size:10px;color:var(--mut);margin-bottom:6px}
+
+@media (max-width:640px){
+  header{padding:10px 12px;gap:8px}
+  header h1{font-size:16px}
+  #tabs{padding:3px;gap:3px}
+  .tab{padding:6px 10px;font-size:12px}
+  #controls{width:min(200px,44vw)}
+  #sidebar{width:88vw}
+  .mp-grid{grid-template-columns:1fr 1fr}
+  .mp-hero .ic{width:42px;height:42px;font-size:22px}
+  .mp-hero h2{font-size:16px}
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>🛰 NER Landslide Watch</h1>
-  <span class="badge">North Eastern Region · Real-time</span>
-  <span id="modeBadge">DEMO DATA</span>
+  <h1><span class="logo-dot"></span>PRAGATI</h1>
   <div id="tabs">
     <div class="tab active" id="tabMap">Map</div>
     <div class="tab" id="tabAlerts">Alerts</div>
+    <div class="tab" id="tabModel">Model</div>
   </div>
 </header>
 
@@ -112,6 +186,53 @@ canvas.spark{width:100%;height:70px;background:var(--card2);border-radius:8px;ma
 
   <div id="alertsPanel"></div>
 
+  <div id="modelPanel">
+    <div class="mp-wrap">
+      <div class="mp-hero">
+        <div class="ic">🧠</div>
+        <div>
+          <h2>Trained Model — Live Prediction</h2>
+          <div class="sub">Run your locally-trained landslide model, or pull live conditions for any coordinate.</div>
+        </div>
+      </div>
+
+      <div class="mp-card">
+        <div id="modelStatus">checking…</div>
+        <h3>Manual inputs</h3>
+        <div class="mp-grid">
+          <label>Rain today (mm)<input id="mp_rain" type="number" value="35"></label>
+          <label>Rain probability %<input id="mp_prob" type="number" value="40"></label>
+          <label>Soil moisture<input id="mp_soil" type="number" step="0.01" value="0.45"></label>
+          <label>Slope °<input id="mp_slope" type="number" value="28"></label>
+          <label>Elevation m<input id="mp_elev" type="number" value="800"></label>
+          <label>NDVI<input id="mp_ndvi" type="number" step="0.01" value="0.30"></label>
+          <label>Water accum.<input id="mp_wa" type="number" value="10"></label>
+          <label>Prev-day accum.<input id="mp_prev" type="number" value="20"></label>
+        </div>
+        <div class="mp-presets">
+          <button onclick="mpPreset('dry')">☀️ Dry day</button>
+          <button onclick="mpPreset('mod')">🌦 Moderate</button>
+          <button onclick="mpPreset('extreme')">⛈ Extreme</button>
+        </div>
+        <button id="mpRun">Run model ▶</button>
+        <div id="mpResult"></div>
+      </div>
+
+      <div class="mp-card">
+        <h3>Live coordinates</h3>
+        <div class="mp-grid" style="grid-template-columns:1fr 1fr">
+          <label>Latitude<input id="mp_lat" type="number" step="0.0001" value="25.5700"></label>
+          <label>Longitude<input id="mp_lon" type="number" step="0.0001" value="91.8800"></label>
+        </div>
+        <div class="mp-presets">
+          <button onclick="mpGeo()">📍 Use my GPS</button>
+          <button onclick="mpLive()" style="background:linear-gradient(95deg,var(--brand1),var(--brand2));color:#fff;border-color:transparent">🌐 LIVE predict</button>
+        </div>
+        <div id="mpSources"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="sidebar">
     <span id="closeSb">✕</span>
     <h2 id="dName">—</h2>
@@ -125,37 +246,6 @@ canvas.spark{width:100%;height:70px;background:var(--card2);border-radius:8px;ma
     <canvas class="spark" id="spark" width="300" height="70"></canvas>
   </div>
 </main>
-
-<div id="modelPanel">
-  <h3> Trained Model — Live Prediction</h3>
-  <div id="modelStatus">checking…</div>
-  <div class="mp-grid">
-    <label>Rain today (mm)<input id="mp_rain" type="number" value="35"></label>
-    <label>Rain probability %<input id="mp_prob" type="number" value="40"></label>
-    <label>Soil moisture<input id="mp_soil" type="number" step="0.01" value="0.45"></label>
-    <label>Slope °<input id="mp_slope" type="number" value="28"></label>
-    <label>Elevation m<input id="mp_elev" type="number" value="800"></label>
-    <label>NDVI<input id="mp_ndvi" type="number" step="0.01" value="0.30"></label>
-    <label>Water accum.<input id="mp_wa" type="number" value="10"></label>
-    <label>Prev-day accum.<input id="mp_prev" type="number" value="20"></label>
-  </div>
-  <div class="mp-presets">
-    <button onclick="mpPreset('dry')">Dry day</button>
-    <button onclick="mpPreset('mod')">Moderate</button>
-    <button onclick="mpPreset('extreme')">Extreme</button>
-  </div>
-    <div class="mp-grid" style="margin-top:6px">
-    <label>Latitude<input id="mp_lat" type="number" step="0.0001" value="25.5700"></label>
-    <label>Longitude<input id="mp_lon" type="number" step="0.0001" value="91.8800"></label>
-  </div>
-  <div class="mp-presets">
-    <button onclick="mpGeo()">📍 Use my GPS</button>
-    <button onclick="mpLive()" style="background:var(--accent);color:#fff;border-color:var(--accent)">🌐 LIVE predict</button>
-  </div>
-  <div id="mpSources" style="font-size:10px;color:var(--mut);margin-bottom:6px"></div>
-  <button id="mpRun">Run model ▶</button>
-  <div id="mpResult"></div>
-</div>
 
 <script>
 /* ================= DATA (demo fallback) ================= */
@@ -393,10 +483,17 @@ function buildAlerts(){
     tabMap.click();openDistrict(d);
   });
 }
-tabAlerts.onclick=()=>{tabAlerts.classList.add("active");tabMap.classList.remove("active");
-  alertsPanel.classList.add("open");buildAlerts();};
-tabMap.onclick=()=>{tabMap.classList.add("active");tabAlerts.classList.remove("active");
-  alertsPanel.classList.remove("open");};
+function showTab(which){
+  tabMap.classList.toggle("active",which==="map");
+  tabAlerts.classList.toggle("active",which==="alerts");
+  tabModel.classList.toggle("active",which==="model");
+  alertsPanel.classList.toggle("open",which==="alerts");
+  modelPanel.classList.toggle("open",which==="model");
+  if(which==="alerts")buildAlerts();
+}
+tabMap.onclick=()=>showTab("map");
+tabAlerts.onclick=()=>showTab("alerts");
+tabModel.onclick=()=>showTab("model");
 
 /* ===== FEED + LIVE MODEL PANEL ===== */
 feed.innerHTML=`IMD weather · <span class="ok">live (12 m)</span><br>
@@ -405,8 +502,8 @@ Satellite (GEE) · <span class="ok">2 h</span><br>Sensors · <span class="st">no
 const MP_API="http://localhost:8000";
 async function mpCheck(){try{
   const j=await (await fetch(MP_API+"/api/health")).json();
-  modelStatus.innerHTML=j.model_loaded?" Trained model is live (alert ≥ "+Math.round(j.threshold*100)+"%)":"Server on, model missing — run train_save.py";
-}catch(e){modelStatus.innerHTML="Model server offline — run: python model_server.py";}}
+  modelStatus.innerHTML=j.model_loaded?" Your trained model is live (alert ≥ "+Math.round(j.threshold*100)+"%)":"⚠️ Server on, model missing — run train_save.py";
+}catch(e){modelStatus.innerHTML=" Model server offline — run: python model_server.py";}}
 mpCheck(); setInterval(mpCheck,10000);
 function mpPreset(k){const P={dry:[0,0,.25,10,300,.6,1,0],mod:[15,20,.40,22,700,.35,6,10],extreme:[120,90,.50,32,900,.25,60,150]}[k];
  [mp_rain,mp_prob,mp_soil,mp_slope,mp_elev,mp_ndvi,mp_wa,mp_prev].forEach((el,i)=>el.value=P[i]);}
@@ -417,10 +514,10 @@ mpRun.onclick=async()=>{mpResult.textContent="…";
   max_water_accumulation:Math.max(+mp_wa.value,+mp_prev.value,1)};
  try{const j=await (await fetch(MP_API+"/api/predict",{method:"POST",
    headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})).json();
-  if(j.error){mpResult.innerHTML=j.error;return;}
+  if(j.error){mpResult.innerHTML=" "+j.error;return;}
   const c={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#22c55e"}[j.risk_band];
   mpResult.innerHTML=`<b style="color:${c}">${(j.probability*100).toFixed(1)}% → ${j.risk_band}</b><br><span>your model's own threshold: ${(j.threshold*100).toFixed(0)}%</span>`;
- }catch(e){mpResult.innerHTML="Can't reach server — is model_server.py running?";}};
+ }catch(e){mpResult.innerHTML=" Can't reach server — is model_server.py running?";}};
 function mpGeo(){navigator.geolocation.getCurrentPosition(p=>{
   mp_lat.value=p.coords.latitude.toFixed(4); mp_lon.value=p.coords.longitude.toFixed(4); mpLive();});}
 async function mpLive(){
@@ -429,12 +526,12 @@ async function mpLive(){
     const j=await (await fetch(MP_API+"/api/predict",{method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({latitude:+mp_lat.value,longitude:+mp_lon.value})})).json();
-    if(j.error){mpResult.innerHTML=j.error;return;}
+    if(j.error){mpResult.innerHTML=" "+j.error;return;}
     const c={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#22c55e"}[j.risk_band];
     mpResult.innerHTML=`<b style="color:${c}">${(j.probability*100).toFixed(1)}% → ${j.risk_band}</b><br><span>threshold ${(j.threshold*100).toFixed(0)}% · live for (${(+mp_lat.value).toFixed(3)}, ${(+mp_lon.value).toFixed(3)})</span>`;
     mpSources.innerHTML=Object.values(j.sources||{}).map(v=>
       `[${v}]`).join(" ");
-  }catch(e){mpResult.innerHTML="Server unreachable — is model_server.py running?";}
+  }catch(e){mpResult.innerHTML=" Server unreachable — is model_server.py running?";}
 }
 render();
 </script>
