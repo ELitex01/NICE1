@@ -1,5 +1,5 @@
-"""The module your notebook imports: from data_collection import merge_csv.
-Put next to the notebook; reads every CSV inside train/ and test/ folders."""
+""" from data_collection import merge_csv.
+reads every CSV inside train/ and test/ folders."""
 import os
 import pandas as pd
 

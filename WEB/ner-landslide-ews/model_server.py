@@ -1,5 +1,4 @@
-"""Serves the ENSEMBLE model (sih_landslide.pkl) + dashboard at http://localhost:8000
-Usage: python model_server.py   (same Anaconda env you trained in)"""
+"""Serves the ENSEMBLE model (sih_landslide.pkl) + dashboard at http://loek mcalhost:8000"""
 import json, math, pickle
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -93,5 +92,5 @@ class Handler(SimpleHTTPRequestHandler):
 
     def log_message(self, *a): pass
 
-print("🌐 Open http://localhost:8000")
+print("Open http://localhost:8000")
 HTTPServer(("0.0.0.0", 8000), Handler).serve_forever()

@@ -1,4 +1,4 @@
-"""MSG91 transactional SMS — DLT-compliant for India bulk SMS."""
+
 import requests
 from backend.app.settings import settings
 

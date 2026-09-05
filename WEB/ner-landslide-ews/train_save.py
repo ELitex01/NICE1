@@ -1,16 +1,4 @@
-"""
-train_save.py — v2 (upgraded to match model.ipynb)
 
-CHANGES vs v1 (all taken from model.ipynb):
-  1. prev_day_water_accumulation is now KEPT as a feature (14 features).
-  2. TWI computed with each split's OWN slope (leak fix).
-  3. DT / RF / GB / XGB tuned with RandomizedSearchCV (same grids as notebook).
-  4. Per-model threshold optimizer: scan 0.70→0.90, maximise F1.
-  5. Soft-voting ENSEMBLE of the 4 tuned models.
-  6. Saves ensemble as sih_landslide.pkl + model_metadata.json.
-
-Usage:  python train_save.py   (~10-20 min with the search)
-"""
 import json, pickle, warnings
 from datetime import datetime, timezone
 from pathlib import Path
@@ -99,13 +87,13 @@ for name in models:
         f1 = f1_score(y_test, (y_probs > thresh).astype(int))
         if f1 > best_f1: best_f1, best_thresh = f1, float(thresh)
 
-    print(f"✅ Best Params: {search.best_params_}")
-    print(f"✅ Optimal Threshold: {best_thresh:.2f} (F1: {best_f1:.4f})\n")
+    print(f" Best Params: {search.best_params_}")
+    print(f" Optimal Threshold: {best_thresh:.2f} (F1: {best_f1:.4f})\n")
     results_list.append({"Model": name, "Best F1 Score": best_f1,
                          "Optimal Threshold": best_thresh})
 
 leaderboard = pd.DataFrame(results_list).sort_values("Best F1 Score", ascending=False)
-print("🏆 FINAL MODEL LEADERBOARD ( >= 0.70 THRESHOLD ) 🏆")
+print(" FINAL MODEL LEADERBOARD ( >= 0.70 THRESHOLD ) ")
 print(leaderboard.to_string(index=False))
 
 # ── 3. feature importances (tuned XGBoost, like the notebook plot) ──────
@@ -117,7 +105,7 @@ print("\n--- Geospatial Feature Importance (tuned XGBoost) ---")
 print(importance_df.to_string(index=False))
 
 # ── 4. soft-voting ensemble of the 4 tuned models ───────────────────────
-print("\n🤝 BUILDING ENSEMBLE (SOFT VOTING) 🤝")
+print("\nBUILDING ENSEMBLE (SOFT VOTING)...")
 ensemble_model = VotingClassifier(
     estimators=[(n, m) for n, m in best_models.items()],
     voting="soft", n_jobs=-1)
@@ -132,7 +120,7 @@ for thresh in np.arange(0.70, 0.91, 0.01):
         best_ensemble_f1, best_ensemble_thresh = f1, float(thresh)
 
 final_preds = (y_probs_ensemble > best_ensemble_thresh).astype(int)
-print(f"\n✅ Optimal Ensemble Threshold: {best_ensemble_thresh:.2f}")
+print(f"\n Optimal Ensemble Threshold: {best_ensemble_thresh:.2f}")
 print("--- FINAL ENSEMBLE PERFORMANCE ---")
 print(confusion_matrix(y_test, final_preds))
 print(classification_report(y_test, final_preds))
@@ -155,5 +143,5 @@ meta = {
                                    importance_df.Importance.round(4))),
 }
 (BASE / "model_metadata.json").write_text(json.dumps(meta, indent=2))
-print(f"\n✅ Ensemble saved as sih_landslide.pkl (+ model_metadata.json)")
+print(f"\n Ensemble saved as sih_landslide.pkl (+ model_metadata.json)")
 print("Next: restart model_server.py")

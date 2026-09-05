@@ -127,7 +127,7 @@ canvas.spark{width:100%;height:70px;background:var(--card2);border-radius:8px;ma
 </main>
 
 <div id="modelPanel">
-  <h3>🧠 Trained Model — Live Prediction</h3>
+  <h3> Trained Model — Live Prediction</h3>
   <div id="modelStatus">checking…</div>
   <div class="mp-grid">
     <label>Rain today (mm)<input id="mp_rain" type="number" value="35"></label>
@@ -405,8 +405,8 @@ Satellite (GEE) · <span class="ok">2 h</span><br>Sensors · <span class="st">no
 const MP_API="http://localhost:8000";
 async function mpCheck(){try{
   const j=await (await fetch(MP_API+"/api/health")).json();
-  modelStatus.innerHTML=j.model_loaded?"✅ Your trained model is live (alert ≥ "+Math.round(j.threshold*100)+"%)":"⚠️ Server on, model missing — run train_save.py";
-}catch(e){modelStatus.innerHTML="❌ Model server offline — run: python model_server.py";}}
+  modelStatus.innerHTML=j.model_loaded?" Trained model is live (alert ≥ "+Math.round(j.threshold*100)+"%)":"Server on, model missing — run train_save.py";
+}catch(e){modelStatus.innerHTML="Model server offline — run: python model_server.py";}}
 mpCheck(); setInterval(mpCheck,10000);
 function mpPreset(k){const P={dry:[0,0,.25,10,300,.6,1,0],mod:[15,20,.40,22,700,.35,6,10],extreme:[120,90,.50,32,900,.25,60,150]}[k];
  [mp_rain,mp_prob,mp_soil,mp_slope,mp_elev,mp_ndvi,mp_wa,mp_prev].forEach((el,i)=>el.value=P[i]);}
@@ -417,10 +417,10 @@ mpRun.onclick=async()=>{mpResult.textContent="…";
   max_water_accumulation:Math.max(+mp_wa.value,+mp_prev.value,1)};
  try{const j=await (await fetch(MP_API+"/api/predict",{method:"POST",
    headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})).json();
-  if(j.error){mpResult.innerHTML="⚠️ "+j.error;return;}
+  if(j.error){mpResult.innerHTML=j.error;return;}
   const c={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#22c55e"}[j.risk_band];
   mpResult.innerHTML=`<b style="color:${c}">${(j.probability*100).toFixed(1)}% → ${j.risk_band}</b><br><span>your model's own threshold: ${(j.threshold*100).toFixed(0)}%</span>`;
- }catch(e){mpResult.innerHTML="❌ Can't reach server — is model_server.py running?";}};
+ }catch(e){mpResult.innerHTML="Can't reach server — is model_server.py running?";}};
 function mpGeo(){navigator.geolocation.getCurrentPosition(p=>{
   mp_lat.value=p.coords.latitude.toFixed(4); mp_lon.value=p.coords.longitude.toFixed(4); mpLive();});}
 async function mpLive(){
@@ -429,12 +429,12 @@ async function mpLive(){
     const j=await (await fetch(MP_API+"/api/predict",{method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({latitude:+mp_lat.value,longitude:+mp_lon.value})})).json();
-    if(j.error){mpResult.innerHTML="⚠️ "+j.error;return;}
+    if(j.error){mpResult.innerHTML=j.error;return;}
     const c={HIGH:"#ef4444",MEDIUM:"#f59e0b",LOW:"#22c55e"}[j.risk_band];
     mpResult.innerHTML=`<b style="color:${c}">${(j.probability*100).toFixed(1)}% → ${j.risk_band}</b><br><span>threshold ${(j.threshold*100).toFixed(0)}% · live for (${(+mp_lat.value).toFixed(3)}, ${(+mp_lon.value).toFixed(3)})</span>`;
     mpSources.innerHTML=Object.values(j.sources||{}).map(v=>
       `[${v}]`).join(" ");
-  }catch(e){mpResult.innerHTML="❌ Server unreachable — is model_server.py running?";}
+  }catch(e){mpResult.innerHTML="Server unreachable — is model_server.py running?";}
 }
 render();
 </script>
